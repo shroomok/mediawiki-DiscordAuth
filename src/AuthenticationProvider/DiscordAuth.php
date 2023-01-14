@@ -61,7 +61,7 @@ class DiscordAuth extends AuthProvider {
 			$user = $this->provider->getResourceOwner( $token );
 
 			return [
-				'name' => 'newwww' . self::DISCORD . $user->getId(),
+				'name' => self::DISCORD . $user->getId(),
 				'realname' => $user->getUsername(),
 				'email' => $user->getEmail(),
 				self::SOURCE => self::DISCORD
