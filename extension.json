@@ -1,0 +1,30 @@
+{
+  "name": "DiscordAuth",
+  "version": "1.0.0",
+  "author": [
+    "Shroomok"
+  ],
+  "url": "https://github.com/shroomok/mediawiki-extensions-DiscordAuth",
+  "description": "Allow users from specified Discord server access to your wiki",
+  "type": "extension",
+  "requires": {
+    "MediaWiki": ">= 1.35.0",
+    "extensions": {
+      "PluggableAuth": ">= 6.0",
+      "WSOAuth": ">= 7.0.0"
+    }
+  },
+  "MessagesDirs": {
+    "DiscordAuth": [
+      "i18n"
+    ]
+  },
+  "AutoloadNamespaces": {
+    "DiscordAuth\\": "src/"
+  },
+  "configPrefix": "discordAuth",
+  "config": {
+  },
+  "load_composer_autoloader": true,
+  "manifest_version": 2
+}

@@ -1,0 +1,9 @@
+{
+	"@metadata": {
+		"authors": [
+			"shroomok"
+		]
+	},
+	"discordauth-desc": "Allow users from specified Discord server access to your wiki",
+	"discordauth-login-button-label": "Discord Login"
+}
