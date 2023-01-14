@@ -1,4 +1,15 @@
 {
+    "name": "shroomok/mediawiki-discord-auth",
+    "description": "Allow users from specified Discord server access to your mediawiki instance",
+    "homepage": "https://github.com/shroomok/mediawiki-DiscordAuth",
+    "authors": [
+        {
+            "name": "Shroomok",
+            "email": "shroomok@gmail.com",
+            "homepage": "https://shroomok.com",
+            "role": "Owner"
+        }
+    ],
     "require": {
         "mediawiki/oauthclient": "*",
         "wohali/oauth2-discord-new": "^1.2"

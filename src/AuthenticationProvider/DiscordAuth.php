@@ -1,4 +1,5 @@
 <?php
+
 namespace DiscordAuth\AuthenticationProvider;
 
 use Wohali\OAuth2\Client\Provider\Discord;
@@ -27,12 +28,7 @@ class DiscordAuth extends AuthProvider {
 	 * @inheritDoc
 	 */
 	public function login( ?string &$key, ?string &$secret, ?string &$authUrl ): bool {
-		$authUrl = $this->provider->getAuthorizationUrl( [
-            'scope' => [
-                'identify',
-                'email'
-            ]
-        ] );
+		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => [ 'identify', 'email' ] ]);
 
 		$secret = $this->provider->getState();
 

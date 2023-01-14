@@ -4,7 +4,7 @@
   "author": [
     "Shroomok"
   ],
-  "url": "https://github.com/shroomok/mediawiki-extensions-DiscordAuth",
+  "url": "https://github.com/shroomok/mediawiki-DiscordAuth",
   "description": "Allow users from specified Discord server access to your wiki",
   "type": "extension",
   "requires": {
