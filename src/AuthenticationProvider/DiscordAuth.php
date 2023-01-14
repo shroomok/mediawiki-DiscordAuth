@@ -8,6 +8,9 @@ use WSOAuth\AuthenticationProvider\AuthProvider;
 
 class DiscordAuth extends AuthProvider {
 
+	const SOURCE = 'source';
+	const DISCORD = 'discord';
+
 	/**
 	 * @var Discord
 	 */
@@ -58,9 +61,10 @@ class DiscordAuth extends AuthProvider {
 			$user = $this->provider->getResourceOwner( $token );
 
 			return [
-				'name' => 'Discord' . $user->getId(),
+				'name' => 'newwww' . self::DISCORD . $user->getId(),
 				'realname' => $user->getUsername(),
-				'email' => $user->getEmail()
+				'email' => $user->getEmail(),
+				self::SOURCE => self::DISCORD
 			];
 		} catch ( \Exception $e ) {
 			return false;

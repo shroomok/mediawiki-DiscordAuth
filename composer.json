@@ -12,7 +12,8 @@
     ],
     "require": {
         "mediawiki/oauthclient": "*",
-        "wohali/oauth2-discord-new": "^1.2"
+        "wohali/oauth2-discord-new": "^1.2",
+        "team-reflex/discord-php": "^7.3"
     },
     "require-dev": {
         "mediawiki/mediawiki-codesniffer": "40.0.1",

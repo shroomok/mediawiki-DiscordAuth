@@ -22,8 +22,13 @@
   "AutoloadNamespaces": {
     "DiscordAuth\\": "src/"
   },
-  "configPrefix": "discordAuth",
-  "config": {
+  "Hooks": {
+    "WSOAuthAfterGetUser": "main"
+  },
+  "HookHandlers": {
+    "main": {
+      "class": "\\DiscordAuth\\DiscordAuthHooks"
+    }
   },
   "load_composer_autoloader": true,
   "manifest_version": 2
