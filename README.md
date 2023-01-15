@@ -1,2 +1,2 @@
 # mediawiki-DiscordAuth
-This MediaWiki extension should allow users from specified Discord server access to your wiki
+This MediaWiki extension should allow users from specified (Shroomok) Discord server access to https://shroomok.com wiki
