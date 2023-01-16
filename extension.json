@@ -22,12 +22,21 @@
   "AutoloadNamespaces": {
     "DiscordAuth\\": "src/"
   },
+  "ServiceWiringFiles": [
+    "includes/ServiceWiring.php"
+  ],
   "Hooks": {
-    "WSOAuthAfterGetUser": "main"
+    "WSOAuthAfterGetUser": "main",
+    "BeforePageDisplay": "main"
   },
   "HookHandlers": {
     "main": {
       "class": "\\DiscordAuth\\DiscordAuthHooks"
+    }
+  },
+  "config": {
+    "DiscordAuthBotToken": {
+      "value": false
     }
   },
   "load_composer_autoloader": true,
