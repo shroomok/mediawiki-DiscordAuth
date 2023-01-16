@@ -2,42 +2,42 @@
   "name": "DiscordAuth",
   "version": "1.0.0",
   "author": [
-    "Shroomok"
+	"Shroomok"
   ],
   "url": "https://github.com/shroomok/mediawiki-DiscordAuth",
   "description": "Allow users from specified Discord server access to your wiki",
   "type": "extension",
   "requires": {
-    "MediaWiki": ">= 1.35.0",
-    "extensions": {
-      "PluggableAuth": ">= 6.0",
-      "WSOAuth": ">= 7.0.0"
-    }
+	"MediaWiki": ">= 1.35.0",
+	"extensions": {
+	  "PluggableAuth": ">= 6.0",
+	  "WSOAuth": ">= 7.0.0"
+	}
   },
   "MessagesDirs": {
-    "DiscordAuth": [
-      "i18n"
-    ]
+	"DiscordAuth": [
+	  "i18n"
+	]
   },
   "AutoloadNamespaces": {
-    "DiscordAuth\\": "src/"
+	"DiscordAuth\\": "src/"
   },
   "ServiceWiringFiles": [
-    "includes/ServiceWiring.php"
+	"includes/ServiceWiring.php"
   ],
   "Hooks": {
-    "WSOAuthAfterGetUser": "main",
-    "BeforePageDisplay": "main"
+	"WSOAuthAfterGetUser": "main",
+	"BeforePageDisplay": "main"
   },
   "HookHandlers": {
-    "main": {
-      "class": "\\DiscordAuth\\DiscordAuthHooks"
-    }
+	"main": {
+	  "class": "\\DiscordAuth\\DiscordAuthHooks"
+	}
   },
   "config": {
-    "DiscordAuthBotToken": {
-      "value": false
-    }
+	"DiscordAuthBotToken": {
+	  "value": false
+	}
   },
   "load_composer_autoloader": true,
   "manifest_version": 2

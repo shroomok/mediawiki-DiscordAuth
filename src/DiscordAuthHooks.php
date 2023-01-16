@@ -3,9 +3,19 @@
 namespace DiscordAuth;
 
 use DiscordAuth\AuthenticationProvider\DiscordAuth;
+use MediaWiki\MediaWikiServices;
+use RestCord\DiscordClient;
 use Sanitizer;
 
 class DiscordAuthHooks {
+
+	/**
+	 * For debug
+	 */
+	public function onBeforePageDisplay($out, $skin) {
+		/** @var DiscordClient $discordClient */
+		$discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
+	}
 
 	/**
 	 * @param array|bool $user_info
