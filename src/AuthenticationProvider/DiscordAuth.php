@@ -62,6 +62,7 @@ class DiscordAuth extends AuthProvider {
 
 			return [
 				'name' => self::DISCORD . $user->getId(),
+				'discord_user_id' => $user->getId(),
 				'realname' => $user->getUsername(),
 				'email' => $user->getEmail(),
 				self::SOURCE => self::DISCORD

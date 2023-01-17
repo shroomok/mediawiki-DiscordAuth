@@ -37,7 +37,15 @@
   "config": {
 	"DiscordAuthBotToken": {
 	  "value": false
-	}
+	},
+    "DiscordGuildId": {
+      "value": false,
+      "descriptionmsg": "Guild (server) id of your Discord Community"
+    },
+    "ApprovedDiscordRoles": {
+      "value": [],
+      "descriptionmsg": "Discord users with the following roles are allowed to login to wiki"
+    }
   },
   "load_composer_autoloader": true,
   "manifest_version": 2
