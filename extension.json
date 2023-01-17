@@ -36,15 +36,16 @@
   },
   "config": {
 	"DiscordAuthBotToken": {
-	  "value": false
+	  "value": false,
+      "descriptionmsg": "String. Discord bot token"
 	},
     "DiscordGuildId": {
       "value": false,
-      "descriptionmsg": "Guild (server) id of your Discord Community"
+      "descriptionmsg": "Integer. Guild (server) id of your Discord Community"
     },
     "ApprovedDiscordRoles": {
       "value": [],
-      "descriptionmsg": "Discord users with the following roles are allowed to login to wiki"
+      "descriptionmsg": "Array of strings. Discord users with the following roles are allowed to login to wiki"
     }
   },
   "load_composer_autoloader": true,

@@ -13,6 +13,7 @@ class DiscordAuthHooks {
 	protected $guildId;
 
 	public function __construct() {
+        /** @var DiscordClient $discordClient */
 		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
 		$this->guildId = (int) MediaWikiServices::getInstance()->getMainConfig()->get('DiscordGuildId');
 	}
@@ -67,7 +68,6 @@ class DiscordAuthHooks {
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
 	protected function checkDiscordUser( $discordUserId ) {
-		/** @var DiscordClient $discordClient */
 		$member = $this->discordClient->guild->getGuildMember(
 			['guild.id' => $this->guildId, 'user.id' => (int) $discordUserId]
 		);
@@ -98,7 +98,7 @@ class DiscordAuthHooks {
 		$roleIds = [];
 		foreach( $roleObjects as $roleObject ) {
 			foreach ( $roleNames as $roleName ) {
-				if ( strtolower( $roleName ) === strtolower( $roleObject->name )) {
+				if ( strtolower( $roleName ) === strtolower( $roleObject->name ) ) {
 					$roleIds[] = $roleObject->id;
 				}
 			}
