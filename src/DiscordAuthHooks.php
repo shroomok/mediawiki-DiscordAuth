@@ -71,9 +71,6 @@ class DiscordAuthHooks {
 		$member = $this->discordClient->guild->getGuildMember(
 			['guild.id' => $this->guildId, 'user.id' => (int) $discordUserId]
 		);
-		if ( !$member ) {
-			return false;
-		}
 
 		$roleIds = $this->getApprovedDiscordRolesIdsByNames(
 			MediaWikiServices::getInstance()->getMainConfig()->get('ApprovedDiscordRoles')
