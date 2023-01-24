@@ -5,6 +5,8 @@ Purpose: give access to some users of [Shroomok Discord Community](https://disco
 
 ## Dependencies
 
+* [mediawiki-extensions-PluggableAuth](https://github.com/wikimedia/mediawiki-extensions-PluggableAuth)
 * [mediawiki-extensions-WSOAuth](https://github.com/wikimedia/mediawiki-extensions-WSOAuth)
 * [Discord Provider for OAuth 2.0 Client](https://github.com/wohali/oauth2-discord-new)
 * [RestCord - Discord API](https://github.com/restcord/restcord)
+
