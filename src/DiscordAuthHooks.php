@@ -5,7 +5,6 @@ namespace DiscordAuth;
 use DiscordAuth\AuthenticationProvider\DiscordAuth;
 use MediaWiki\MediaWikiServices;
 use RestCord\DiscordClient;
-use Sanitizer;
 
 class DiscordAuthHooks {
 
@@ -13,7 +12,7 @@ class DiscordAuthHooks {
 	protected $guildId;
 
 	public function __construct() {
-        /** @var DiscordClient $discordClient */
+		/** @var DiscordClient $discordClient */
 		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
 		$this->guildId = (int) MediaWikiServices::getInstance()->getMainConfig()->get('DiscordGuildId');
 	}
@@ -30,14 +29,6 @@ class DiscordAuthHooks {
 			return false;
 		}
 		if ( $user_info[DiscordAuth::SOURCE] !== DiscordAuth::DISCORD ) {
-			return false;
-		}
-
-		if ( !isset( $user_info['email'] ) ) {
-			return false;
-		}
-
-		if ( !Sanitizer::validateEmail( $user_info['email'] ) ) {
 			return false;
 		}
 
