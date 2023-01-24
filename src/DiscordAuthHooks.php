@@ -29,6 +29,13 @@ class DiscordAuthHooks {
 	}
 
 	/**
+	 *
+	 * This hook runs for users who've been logged through Discord
+	 * it does:
+	 * - remove default content from Main page
+	 * - draws a form for creating new pages
+	 * - shows current User recent contributions
+	 *
 	 * @param \OutputPage $out
 	 * @param $text
 	 * @throws \MWException
