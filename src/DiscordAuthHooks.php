@@ -2,9 +2,18 @@
 
 namespace DiscordAuth;
 
-use DiscordAuth\AuthenticationProvider\DiscordAuth;
-use MediaWiki\MediaWikiServices;
+use MediaWiki\Permissions\Authority;
+use MediaWiki\User\UserIdentity;
+use Title;
+use Status;
+use HTMLForm;
+use RequestContext;
 use RestCord\DiscordClient;
+use MalformedTitleException;
+use MediaWiki\MediaWikiServices;
+use MediaWiki\Revision\ContributionsLookup;
+use MediaWiki\User\UserGroupManager;
+use DiscordAuth\AuthenticationProvider\DiscordAuth;
 
 class DiscordAuthHooks {
 
@@ -20,26 +29,56 @@ class DiscordAuthHooks {
 	}
 
 	/**
-	 * @return array
+	 * @param \OutputPage $out
+	 * @param $text
+	 * @throws \MWException
 	 */
-	protected function getDiscordNS() {
-		if ( !is_array( $this->config->get('DiscordNS') ) ) {
-			return [];
+	public function onOutputPageBeforeHTML( \OutputPage $out, &$text ) {
+		if ( $this->config->get('DiscordShowUserContributionsOnMainPage') !== true ) {
+			return;
 		}
 
-		if ( !count( $this->config->get('DiscordNS') ) ) {
-			return [];
+		if ( $this->config->get('DiscordToRegisterNS') !== true ) {
+			return;
 		}
 
-		if ( !array_key_exists( 'id', $this->config->get('DiscordNS') ) ) {
-			return [];
+		if ( $out->getTitle()->getTitleValue()->getText() !== 'Main Page' ) {
+			return;
 		}
 
-		if ( !array_key_exists( 'alias', $this->config->get('DiscordNS') ) ) {
-			return [];
+		if ( !$ns = $this->getDiscordNS() ) {
+			return;
 		}
 
-		return $this->config->get('DiscordNS');
+		/** @var UserGroupManager $um */
+		$um = MediaWikiServices::getInstance()->get('UserGroupManager');
+		if ( !in_array( strtolower($ns['alias']), $um->getUserGroups($out->getUser() ) ) ) {
+			return;
+		}
+		$text = '';
+		$form = HTMLForm::factory('ooui', [
+			'page' => [
+				'type' => 'text',
+				'name' => 'page',
+				'label-message' => 'mypage',
+				'required' => true,
+			],
+		], $out->getContext());
+		$form->setSubmitTextMsg('create');
+		$form->setSubmitCallback( [$this, 'submitFormHandler'] );
+		$form->show();
+
+		$linksToRecentEditsByCurrentAuthor = $this->getPagesLinksByUserContributions(
+			$out->getUser(),
+			$out->getAuthority()
+		);
+
+		$text .= \Html::element('h3', [], 'Your recent contributions:');
+		foreach($linksToRecentEditsByCurrentAuthor as $link) {
+			$text .= \Html::openElement( 'p' );
+			$text .= \Html::element( 'a', ['href' => $link['url']], $link['anchor']);
+			$text .= \Html::closeElement( 'p' );
+		}
 	}
 
 	/**
@@ -155,5 +194,70 @@ class DiscordAuthHooks {
 			}
 		}
 		return $roleIds;
+	}
+
+	/**
+	 * @return array
+	 */
+	protected function getDiscordNS() {
+		if ( !is_array( $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		if ( !count( $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		if ( !array_key_exists( 'id', $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		if ( !array_key_exists( 'alias', $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		return $this->config->get('DiscordNS');
+	}
+
+	/**
+	 * @param UserIdentity $user
+	 * @param Authority $authority
+	 * @param int $limit
+	 * @return array
+	 */
+	protected function getPagesLinksByUserContributions( UserIdentity $user, Authority $authority, $limit = 200 )
+	{
+		/** @var ContributionsLookup $cl */
+		$cl = MediaWikiServices::getInstance()->get('ContributionsLookup');
+		$revisions = $cl->getContributions( $user, $limit, $authority )->getRevisions();
+		$recentEditsByCurrentAuthor = [];
+		foreach ($revisions as $revision) {
+			$recentEditsByCurrentAuthor[$revision->getPageId()] = [
+				'anchor' => $revision->getPageAsLinkTarget()->getText(),
+				'url' => MediaWikiServices::getInstance()
+					->getWikiPageFactory()
+					->newFromID($revision->getPageId())
+					->getSourceURL()
+			];
+		}
+		return $recentEditsByCurrentAuthor;
+	}
+
+	/**
+	 * @param $formData
+	 * @return Status|void
+	 */
+	protected function submitFormHandler( $formData ) {
+		if (strpos(strtolower($formData['page']), 'discord:') !== 0) {
+			$formData['page'] = 'Discord:' . $formData['page'];
+		}
+		try {
+			$page = Title::newFromTextThrow($formData['page']);
+		} catch (MalformedTitleException $e) {
+			return Status::newFatal($e->getMessageObject());
+		}
+		$query = ['action' => 'edit'];
+		$url = $page->getFullUrlForRedirect($query);
+		RequestContext::getMain()->getOutput()->redirect($url);
 	}
 }

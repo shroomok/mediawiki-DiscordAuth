@@ -27,7 +27,8 @@
   ],
   "Hooks": {
 	"WSOAuthAfterGetUser": "main",
-	"MediaWikiServices": "main"
+	"MediaWikiServices": "main",
+	"OutputPageBeforeHTML": "main"
   },
   "HookHandlers": {
 	"main": {
@@ -54,6 +55,10 @@
 	"DiscordNS": {
 	  "value": false,
 	  "descriptionmsg": "Discord NS object, for instance { \"id\": 4000, \"alias\": \"Discord\" }"
+	},
+	"DiscordShowUserContributionsOnMainPage": {
+	  "value": false,
+	  "descriptionmsg": "Change main page to make it easier for navigation and writing new articles for Discord user"
 	}
   },
   "load_composer_autoloader": true,
