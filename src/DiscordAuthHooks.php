@@ -38,7 +38,7 @@ class DiscordAuthHooks {
 			return false;
 		}
 
-		$dbr = wfGetDB(DB_MASTER);
+		$dbr = wfGetDB( DB_MASTER );
 		$user = $dbr->select(
 			'user',
 			['user_name'],
@@ -72,7 +72,7 @@ class DiscordAuthHooks {
 		}
 
 		foreach ( $roleIds as $roleId ) {
-			if (in_array( $roleId, $member->roles )) {
+			if ( in_array( $roleId, $member->roles ) ) {
 				return true;
 			}
 		}
