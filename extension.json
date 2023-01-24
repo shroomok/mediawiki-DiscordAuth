@@ -26,7 +26,8 @@
 	"includes/ServiceWiring.php"
   ],
   "Hooks": {
-	"WSOAuthAfterGetUser": "main"
+	"WSOAuthAfterGetUser": "main",
+	"MediaWikiServices": "main"
   },
   "HookHandlers": {
 	"main": {
@@ -36,16 +37,24 @@
   "config": {
 	"DiscordAuthBotToken": {
 	  "value": false,
-      "descriptionmsg": "String. Discord bot token"
+	  "descriptionmsg": "String. Discord bot token"
 	},
-    "DiscordGuildId": {
-      "value": false,
-      "descriptionmsg": "Integer. Guild (server) id of your Discord Community"
-    },
-    "ApprovedDiscordRoles": {
-      "value": [],
-      "descriptionmsg": "Array of strings. Discord users with the following roles are allowed to login to wiki"
-    }
+	"DiscordGuildId": {
+	  "value": false,
+	  "descriptionmsg": "Integer. Guild (server) id of your Discord Community"
+	},
+	"DiscordApprovedRoles": {
+	  "value": [],
+	  "descriptionmsg": "Array of strings. Discord users with the following roles are allowed to login to wiki"
+	},
+	"DiscordToRegisterNS": {
+	  "value": false,
+	  "descriptionmsg": "This flag regulates whether to run onMediaWikiServices hook or not which registers Discord NS, group, and permissions"
+	},
+	"DiscordNS": {
+	  "value": false,
+	  "descriptionmsg": "Discord NS object, for instance { \"id\": 4000, \"alias\": \"Discord\" }"
+	}
   },
   "load_composer_autoloader": true,
   "manifest_version": 2

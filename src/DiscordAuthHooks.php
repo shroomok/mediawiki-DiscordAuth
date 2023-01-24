@@ -10,16 +10,76 @@ class DiscordAuthHooks {
 
 	protected $discordClient;
 	protected $guildId;
+	protected $config;
 
 	public function __construct() {
 		/** @var DiscordClient $discordClient */
 		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
+		$this->config = MediaWikiServices::getInstance()->getMainConfig();
 		$this->guildId = (int) MediaWikiServices::getInstance()->getMainConfig()->get('DiscordGuildId');
 	}
 
 	/**
-	 * @param array|bool $user_info
+	 * @return array
+	 */
+	protected function getDiscordNS() {
+		if ( !is_array( $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		if ( !count( $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		if ( !array_key_exists( 'id', $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		if ( !array_key_exists( 'alias', $this->config->get('DiscordNS') ) ) {
+			return [];
+		}
+
+		return $this->config->get('DiscordNS');
+	}
+
+	/**
+	 * @param $services
+	 */
+	public function onMediaWikiServices( &$services ) {
+		global $wgAvailableRights, $wgNamespaceProtection, $wgNamespacesWithSubpages,
+			   $wgContentNamespaces, $wgGroupPermissions, $wgNamespacesToBeSearchedDefault,
+			   $wgOAuthAutoPopulateGroups, $wgExtraNamespaces;
+
+		if ( $this->config->get('DiscordToRegisterNS') !== true ) {
+			return;
+		}
+
+		if (!$ns = $this->getDiscordNS()) {
+			return;
+		}
+		if ( array_key_exists( $ns['id'], $wgExtraNamespaces ) ) {
+			return;
+		}
+		$wgExtraNamespaces[$ns['id']] = $ns['alias'];
+		$wgExtraNamespaces[$ns['id'] + 1] = $ns['alias'] . '_talk';
+
+		$lowerAlias = strtolower( $ns['alias'] );
+		$right = 'edit' . $lowerAlias;
+
+		$wgAvailableRights[] = $right;
+		$wgContentNamespaces[] = $ns['id'];
+		$wgNamespaceProtection[$ns['id']] = [$right];
+		$wgNamespacesWithSubpages[$ns['id']] = true;
+		$wgGroupPermissions['sysop'][$right] = true;
+		$wgGroupPermissions[$lowerAlias][$right] = true;
+		$wgNamespacesToBeSearchedDefault[$ns['id']] = 1;
+		$wgOAuthAutoPopulateGroups[] = $lowerAlias;
+	}
+
+	/**
+	 * @param $user_info
 	 * @param $errorMessage
+	 * @return bool
 	 */
 	public function onWSOAuthAfterGetUser( &$user_info, &$errorMessage ): bool {
 		if ( !$user_info ) {
@@ -64,7 +124,7 @@ class DiscordAuthHooks {
 		);
 
 		$roleIds = $this->getApprovedDiscordRolesIdsByNames(
-			MediaWikiServices::getInstance()->getMainConfig()->get('ApprovedDiscordRoles')
+			MediaWikiServices::getInstance()->getMainConfig()->get('DiscordApprovedRoles')
 		);
 
 		if ( !$roleIds ) {
