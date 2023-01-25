@@ -72,7 +72,19 @@ class DiscordAuthHooks {
 			],
 		], $out->getContext());
 		$form->setSubmitTextMsg('create');
-		$form->setSubmitCallback( [$this, 'submitFormHandler'] );
+		$form->setSubmitCallback( function ( $formData ) {
+			if (strpos(strtolower($formData['page']), 'discord:') !== 0) {
+				$formData['page'] = 'Discord:' . $formData['page'];
+			}
+			try {
+				$page = Title::newFromTextThrow($formData['page']);
+			} catch (MalformedTitleException $e) {
+				return Status::newFatal($e->getMessageObject());
+			}
+			$query = ['action' => 'edit'];
+			$url = $page->getFullUrlForRedirect($query);
+			RequestContext::getMain()->getOutput()->redirect($url);
+		} );
 		$form->show();
 
 		$linksToRecentEditsByCurrentAuthor = $this->getPagesLinksByUserContributions(
@@ -96,7 +108,7 @@ class DiscordAuthHooks {
 			   $wgContentNamespaces, $wgGroupPermissions, $wgNamespacesToBeSearchedDefault,
 			   $wgOAuthAutoPopulateGroups, $wgExtraNamespaces;
 
-        $config = $services->getMainConfig();
+		$config = $services->getMainConfig();
 		if ( $config->get('DiscordToRegisterNS') !== true ) {
 			return;
 		}
@@ -139,9 +151,13 @@ class DiscordAuthHooks {
 			return false;
 		}
 
+		$userApproved = false;
 		try {
-			$this->checkDiscordUser( $user_info['discord_user_id' ]);
+			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id' ]);
 		} catch ( \Exception $e ) {
+			return false;
+		}
+		if (!$userApproved) {
 			return false;
 		}
 
@@ -249,23 +265,5 @@ class DiscordAuthHooks {
 			];
 		}
 		return $recentEditsByCurrentAuthor;
-	}
-
-	/**
-	 * @param $formData
-	 * @return Status|void
-	 */
-	protected function submitFormHandler( $formData ) {
-		if (strpos(strtolower($formData['page']), 'discord:') !== 0) {
-			$formData['page'] = 'Discord:' . $formData['page'];
-		}
-		try {
-			$page = Title::newFromTextThrow($formData['page']);
-		} catch (MalformedTitleException $e) {
-			return Status::newFatal($e->getMessageObject());
-		}
-		$query = ['action' => 'edit'];
-		$url = $page->getFullUrlForRedirect($query);
-		RequestContext::getMain()->getOutput()->redirect($url);
 	}
 }
