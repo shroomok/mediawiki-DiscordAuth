@@ -13,7 +13,7 @@
 	"require": {
 		"mediawiki/oauthclient": "*",
 		"wohali/oauth2-discord-new": "^1.2",
-		"restcord/restcord": "dev-develop"
+		"restcord/restcord": "*"
 	},
 	"repositories": [
 		{
