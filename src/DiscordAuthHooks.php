@@ -53,7 +53,7 @@ class DiscordAuthHooks {
 			return;
 		}
 
-		if ( !$ns = $this->getDiscordNS() ) {
+		if ( !$ns = self::getDiscordNS($this->config->get('DiscordNS')) ) {
 			return;
 		}
 
@@ -89,18 +89,19 @@ class DiscordAuthHooks {
 	}
 
 	/**
-	 * @param $services
+	 * @param MediaWikiServices $services
 	 */
-	public function onMediaWikiServices( &$services ) {
+	public static function onMediaWikiServices( &$services ) {
 		global $wgAvailableRights, $wgNamespaceProtection, $wgNamespacesWithSubpages,
 			   $wgContentNamespaces, $wgGroupPermissions, $wgNamespacesToBeSearchedDefault,
 			   $wgOAuthAutoPopulateGroups, $wgExtraNamespaces;
 
-		if ( $this->config->get('DiscordToRegisterNS') !== true ) {
+        $config = $services->getMainConfig();
+		if ( $config->get('DiscordToRegisterNS') !== true ) {
 			return;
 		}
 
-		if (!$ns = $this->getDiscordNS()) {
+		if (!$ns = self::getDiscordNS($config->get('DiscordNS'))) {
 			return;
 		}
 		if ( array_key_exists( $ns['id'], $wgExtraNamespaces ) ) {
@@ -206,24 +207,24 @@ class DiscordAuthHooks {
 	/**
 	 * @return array
 	 */
-	protected function getDiscordNS() {
-		if ( !is_array( $this->config->get('DiscordNS') ) ) {
+	public static function getDiscordNS( $discordNSConfig) {
+		if ( !is_array( $discordNSConfig ) ) {
 			return [];
 		}
 
-		if ( !count( $this->config->get('DiscordNS') ) ) {
+		if ( !count( $discordNSConfig ) ) {
 			return [];
 		}
 
-		if ( !array_key_exists( 'id', $this->config->get('DiscordNS') ) ) {
+		if ( !array_key_exists( 'id', $discordNSConfig ) ) {
 			return [];
 		}
 
-		if ( !array_key_exists( 'alias', $this->config->get('DiscordNS') ) ) {
+		if ( !array_key_exists( 'alias', $discordNSConfig ) ) {
 			return [];
 		}
 
-		return $this->config->get('DiscordNS');
+		return $discordNSConfig;
 	}
 
 	/**

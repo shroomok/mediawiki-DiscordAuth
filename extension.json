@@ -27,7 +27,7 @@
   ],
   "Hooks": {
 	"WSOAuthAfterGetUser": "main",
-	"MediaWikiServices": "main",
+	"MediaWikiServices": "\\DiscordAuth\\DiscordAuthHooks::onMediaWikiServices",
 	"OutputPageBeforeHTML": "main"
   },
   "HookHandlers": {
