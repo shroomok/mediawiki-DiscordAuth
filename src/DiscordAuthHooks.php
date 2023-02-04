@@ -134,6 +134,7 @@ class DiscordAuthHooks {
 		$wgGroupPermissions[$lowerAlias][$right] = true;
 		$wgNamespacesToBeSearchedDefault[$ns['id']] = 1;
 		$wgOAuthAutoPopulateGroups[] = $lowerAlias;
+        $wgNamespaceProtection[NS_FILE] = $right;
 	}
 
 	/**
