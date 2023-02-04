@@ -130,6 +130,7 @@ class DiscordAuthHooks {
 		$wgNamespaceProtection[$ns['id']] = [$right];
 		$wgNamespacesWithSubpages[$ns['id']] = true;
 		$wgGroupPermissions['sysop'][$right] = true;
+        $wgGroupPermissions[$lowerAlias]['upload'] = true;
 		$wgGroupPermissions[$lowerAlias][$right] = true;
 		$wgNamespacesToBeSearchedDefault[$ns['id']] = 1;
 		$wgOAuthAutoPopulateGroups[] = $lowerAlias;
