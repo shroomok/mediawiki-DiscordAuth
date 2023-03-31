@@ -31,7 +31,7 @@ class DiscordAuth extends AuthProvider {
 	 * @inheritDoc
 	 */
 	public function login( ?string &$key, ?string &$secret, ?string &$authUrl ): bool {
-		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => [ 'identify' ] ]);
+		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => [ 'identify', 'email' ] ]);
 
 		$secret = $this->provider->getState();
 
@@ -64,7 +64,7 @@ class DiscordAuth extends AuthProvider {
 				'name' => self::DISCORD . '-' . $user->getId(),
 				'discord_user_id' => $user->getId(),
 				'realname' => $user->getUsername(),
-				'email' => $user->getId() . '@discord.com',
+				'email' => $user->getEmail(),
 				self::SOURCE => self::DISCORD
 			];
 		} catch ( \Exception $e ) {
