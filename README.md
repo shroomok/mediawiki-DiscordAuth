@@ -36,6 +36,7 @@ git clone git@github.com:wikimedia/mediawiki-extensions-WSOAuth.git WSOAuth
 git clone git@github.com:shroomok/mediawiki-DiscordAuth.git DiscordAuth
 cd <path-to-wiki>
 composer update
+php maintenance/update.php
 ```
 
 
