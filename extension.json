@@ -46,7 +46,7 @@
 	},
 	"DiscordApprovedRoles": {
 	  "value": [],
-	  "descriptionmsg": "Array of strings. Discord users with the following roles are allowed to login to wiki"
+	  "descriptionmsg": "Array of strings. An array of Discord Role names. Discord users with the following roles are allowed to login to wiki"
 	},
 	"DiscordToRegisterNS": {
 	  "value": false,

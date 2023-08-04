@@ -14,18 +14,22 @@ use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\ContributionsLookup;
 use MediaWiki\User\UserGroupManager;
 use DiscordAuth\AuthenticationProvider\DiscordAuth;
+use MediaWiki\Logger\LoggerFactory;
 
 class DiscordAuthHooks {
 
 	protected $discordClient;
 	protected $guildId;
 	protected $config;
+	protected $logger;
 
 	public function __construct() {
 		/** @var DiscordClient $discordClient */
 		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
 		$this->config = MediaWikiServices::getInstance()->getMainConfig();
 		$this->guildId = (int) MediaWikiServices::getInstance()->getMainConfig()->get('DiscordGuildId');
+		// Accessing this in checkDiscordUser returns null for some reason?
+        $this->logger = LoggerFactory::getInstance( 'DiscordAuth' );
 	}
 
 	/**
@@ -184,15 +188,22 @@ class DiscordAuthHooks {
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
 	protected function checkDiscordUser( $discordUserId ) {
+		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Checking User {$discordUserId}");
 		$member = $this->discordClient->guild->getGuildMember(
 			['guild.id' => $this->guildId, 'user.id' => (int) $discordUserId]
 		);
 
+		$memberRolesJson = json_encode($member->roles);
+		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Member has roles {$memberRolesJson}");
+
 		$roleIds = $this->getApprovedDiscordRolesIdsByNames(
 			MediaWikiServices::getInstance()->getMainConfig()->get('DiscordApprovedRoles')
 		);
+		$roleIdsJson = json_encode($roleIds);
+		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Found approved role list: {$roleIdsJson}");
 
 		if ( !$roleIds ) {
+			LoggerFactory::getInstance( 'DiscordAuth' )->error("No approved Discord role IDs were found. Please check that role names are spelled correctly.");
 			return false;
 		}
 
