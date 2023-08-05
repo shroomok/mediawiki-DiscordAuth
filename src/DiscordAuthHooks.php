@@ -27,7 +27,7 @@ class DiscordAuthHooks {
 		/** @var DiscordClient $discordClient */
 		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
 		$this->config = MediaWikiServices::getInstance()->getMainConfig();
-		$this->guildId = (int) MediaWikiServices::getInstance()->getMainConfig()->get('DiscordGuildId');
+		$this->guildId = $this->config->get('DiscordGuildId');
 		// Accessing this in checkDiscordUser returns null for some reason?
         $this->logger = LoggerFactory::getInstance( 'DiscordAuth' );
 	}
@@ -148,19 +148,31 @@ class DiscordAuthHooks {
 	 */
 	public function onWSOAuthAfterGetUser( &$user_info, &$errorMessage ): bool {
 		if ( !$user_info ) {
+		    $errorMessage = 'Failed to get user info';
 			return false;
 		}
 		if ( !isset( $user_info[DiscordAuth::SOURCE] )) {
+		    $errorMessage = 'Authentication attempt missing source attribute';
 			return false;
 		}
 		if ( $user_info[DiscordAuth::SOURCE] !== DiscordAuth::DISCORD ) {
+		    $errorMessage = 'Authentication attempt source is not DiscordAuth';
 			return false;
 		}
+		if ( !isset( $this->guildId )) {
+		    $errorMessage = 'No guild configured';
+		    return false;
+		}
+        if ( $this->config->get('DiscordApprovedRoles') === null ) {
+            $errorMessage = 'No approved roles configured';
+            return false;
+        }
 
 		$userApproved = false;
 		try {
-			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id' ]);
+			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id'], $this->guildId, $this->config->get('DiscordApprovedRoles') );
 		} catch ( \Exception $e ) {
+		    $errorMessage = $e->getMessage();
 			return false;
 		}
 		if (!$userApproved) {
@@ -168,12 +180,12 @@ class DiscordAuthHooks {
 		}
 
 		$dbr = wfGetDB( DB_MASTER );
-		$user = $dbr->select(
-			'user',
-			['user_name'],
-			['user_email' => $user_info['email']],
-			__METHOD__
-		)->fetchObject();
+        $user = $dbr->select(
+            'user',
+            ['user_name'],
+            ['user_email' => $user_info['email']],
+            __METHOD__
+        )->fetchObject();
 
 		if ( $user ) {
 			$user_info['name'] = $user->user_name;
@@ -183,27 +195,27 @@ class DiscordAuthHooks {
 	}
 
 	/**
-	 * @param integer $discordUserId
+	 * @param string $discordUserId
+	 * @param integer $discordGuildId
+	 * @param array $approvedRoleNames
 	 * @throws \Psr\Container\ContainerExceptionInterface
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
-	protected function checkDiscordUser( $discordUserId ) {
+	protected function checkDiscordUser(string $discordUserId, int $discordGuildId, array $approvedRoleNames ) {
 		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Checking User {$discordUserId}");
 		$member = $this->discordClient->guild->getGuildMember(
-			['guild.id' => $this->guildId, 'user.id' => (int) $discordUserId]
+			['guild.id' => $discordGuildId, 'user.id' => (int) $discordUserId]
 		);
 
 		$memberRolesJson = json_encode($member->roles);
 		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Member has roles {$memberRolesJson}");
 
-		$roleIds = $this->getApprovedDiscordRolesIdsByNames(
-			MediaWikiServices::getInstance()->getMainConfig()->get('DiscordApprovedRoles')
-		);
+		$roleIds = $this->getApprovedDiscordRolesIdsByNames( $discordGuildId, $approvedRoleNames );
 		$roleIdsJson = json_encode($roleIds);
 		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Found approved role list: {$roleIdsJson}");
 
 		if ( !$roleIds ) {
-			LoggerFactory::getInstance( 'DiscordAuth' )->error("No approved Discord role IDs were found. Please check that role names are spelled correctly.");
+			LoggerFactory::getInstance( 'DiscordAuth' )->error('No approved Discord role IDs were found. Please check that role names are spelled correctly.');
 			return false;
 		}
 
@@ -213,15 +225,17 @@ class DiscordAuthHooks {
 			}
 		}
 
+        LoggerFactory::getInstance( 'DiscordAuth' )->error('Login failed: member does not have any approved roles');
 		return false;
 	}
 
 	/**
+	 * @param $guildId
 	 * @param $roleNames
 	 * @return array
 	 */
-	protected function getApprovedDiscordRolesIdsByNames( $roleNames ) {
-		$roleObjects = $this->discordClient->guild->getGuildRoles( ['guild.id' => $this->guildId] );
+	protected function getApprovedDiscordRolesIdsByNames( $guildId, $roleNames ) {
+		$roleObjects = $this->discordClient->guild->getGuildRoles( ['guild.id' => $guildId] );
 		$roleIds = [];
 		foreach( $roleObjects as $roleObject ) {
 			foreach ( $roleNames as $roleName ) {

@@ -63,7 +63,8 @@ $wgPluggableAuth_Config['discordauth'] = [
 $wgDiscordAuthBotToken = '<DISCORD BOT TOKEN>';
 $wgDiscordGuildId = <YOUR DISCORD GUILD ID>; // you can copy this within Discord app interface
 $wgDiscordApprovedRoles = ['<role name 1>', '<role name 2>']; // users only with the specified roles will be able to login
-
+$wgDiscordCollectEmail = false; // Collect the user's email from Discord and use it when creating their wiki account
+$wgPrependDiscordToWikiUsername = true; // Prepend "Discord" before usernames to distinguish them from locally created users (e.g. "Discord-User123" instead of User123)
 ```
 
 ### LocalSettings.php If you want to have a custom NS for Discord users and change Main Page layout to simplify ux

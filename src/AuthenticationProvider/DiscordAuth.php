@@ -3,6 +3,7 @@
 namespace DiscordAuth\AuthenticationProvider;
 
 use Wohali\OAuth2\Client\Provider\Discord;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserIdentity;
 use WSOAuth\AuthenticationProvider\AuthProvider;
 
@@ -15,6 +16,8 @@ class DiscordAuth extends AuthProvider {
 	 * @var Discord
 	 */
 	private $provider;
+	private $collectEmail;
+	private $prependDiscordToUsername;
 
 	/**
 	 * @inheritDoc
@@ -25,13 +28,22 @@ class DiscordAuth extends AuthProvider {
 			'clientSecret' => $clientSecret,
 			'redirectUri' => $redirectUri
 		] );
+		$config = MediaWikiServices::getInstance()->getMainConfig();
+		$this->collectEmail = (bool)$config->get('DiscordCollectEmail');
+		$this->prependDiscordToUsername = (bool)$config->get('PrependDiscordToWikiUsername');
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public function login( ?string &$key, ?string &$secret, ?string &$authUrl ): bool {
-		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => [ 'identify', 'email' ] ]);
+		$scopes = ['identify'];
+
+		if ($this->collectEmail) {
+			$scopes[] = 'email';
+		}
+
+		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => $scopes]);
 
 		$secret = $this->provider->getState();
 
@@ -49,25 +61,28 @@ class DiscordAuth extends AuthProvider {
 	 */
 	public function getUser( string $key, string $secret, &$errorMessage ) {
 		if ( !isset( $_GET['code'] ) ) {
+			$errorMessage = 'Discord did not return authorization code';
 			return false;
 		}
 
-		if ( !isset( $_GET['state'] ) || empty( $_GET['state'] ) || ( $_GET['state'] !== $secret ) ) {
+		if (empty( $_GET['state'] ) || ( $_GET['state'] !== $secret) ) {
+			$errorMessage = 'Discord did not return authorization state';
 			return false;
 		}
 
 		try {
-			$token = $this->provider->getAccessToken( 'authorization_code', [ 'code' => $_GET['code'] ] );
-			$user = $this->provider->getResourceOwner( $token );
-
+			$token = $this->provider->getAccessToken('authorization_code', ['code' => $_GET['code']]);
+			$user = $this->provider->getResourceOwner($token);
+			$username = $this->prependDiscordToUsername ? self::DISCORD . '-' . $user->getUsername() : $user->getUsername();
 			return [
-				'name' => self::DISCORD . '-' . $user->getId(),
+				'name' => $username,
 				'discord_user_id' => $user->getId(),
-				'realname' => $user->getUsername(),
-				'email' => $user->getEmail(),
+				'realname' => $username,
+				'email' => $this->collectEmail ? $user->getEmail() : '',
 				self::SOURCE => self::DISCORD
 			];
 		} catch ( \Exception $e ) {
+			$errorMessage = $e->getMessage();
 			return false;
 		}
 	}
