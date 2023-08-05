@@ -148,7 +148,6 @@ class DiscordAuthHooks {
 	 */
 	public function onWSOAuthAfterGetUser( &$user_info, &$errorMessage ): bool {
 		if ( !$user_info ) {
-		    $errorMessage = 'Failed to get user info';
 			return false;
 		}
 		if ( !isset( $user_info[DiscordAuth::SOURCE] )) {
