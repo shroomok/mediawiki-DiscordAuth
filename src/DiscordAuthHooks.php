@@ -178,16 +178,18 @@ class DiscordAuthHooks {
 			return false;
 		}
 
-		$dbr = wfGetDB( DB_MASTER );
-        $user = $dbr->select(
-            'user',
-            ['user_name'],
-            ['user_email' => $user_info['email']],
-            __METHOD__
-        )->fetchObject();
+		if ( $this->config->get('DiscordCollectEmail') === true ) {
+			$dbr = wfGetDB( DB_MASTER );
+			$user = $dbr->select(
+				'user',
+				['user_name'],
+				['user_email' => $user_info['email']],
+				__METHOD__
+			)->fetchObject();
 
-		if ( $user ) {
-			$user_info['name'] = $user->user_name;
+			if ( $user ) {
+				$user_info['name'] = $user->user_name;
+			}
 		}
 
 		return true;
