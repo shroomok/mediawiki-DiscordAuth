@@ -17,7 +17,6 @@ class DiscordAuth extends AuthProvider {
 	 */
 	private $provider;
 	private $collectEmail;
-	private $prependDiscordToUsername;
 
 	/**
 	 * @inheritDoc
@@ -30,7 +29,6 @@ class DiscordAuth extends AuthProvider {
 		] );
 		$config = MediaWikiServices::getInstance()->getMainConfig();
 		$this->collectEmail = (bool)$config->get('DiscordCollectEmail');
-		$this->prependDiscordToUsername = (bool)$config->get('PrependDiscordToWikiUsername');
 	}
 
 	/**
@@ -73,11 +71,10 @@ class DiscordAuth extends AuthProvider {
 		try {
 			$token = $this->provider->getAccessToken('authorization_code', ['code' => $_GET['code']]);
 			$user = $this->provider->getResourceOwner($token);
-			$username = $this->prependDiscordToUsername ? self::DISCORD . '-' . $user->getUsername() : $user->getUsername();
 			return [
-				'name' => $username,
+				'name' => self::DISCORD . '-' . $user->getId(),
 				'discord_user_id' => $user->getId(),
-				'realname' => $username,
+				'realname' => $user->getUsername(),
 				'email' => $this->collectEmail ? $user->getEmail() : '',
 				self::SOURCE => self::DISCORD
 			];
