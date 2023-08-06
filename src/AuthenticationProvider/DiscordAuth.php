@@ -71,13 +71,18 @@ class DiscordAuth extends AuthProvider {
 		try {
 			$token = $this->provider->getAccessToken('authorization_code', ['code' => $_GET['code']]);
 			$user = $this->provider->getResourceOwner($token);
-			return [
+			$userInfo = [
 				'name' => self::DISCORD . '-' . $user->getId(),
 				'discord_user_id' => $user->getId(),
 				'realname' => $user->getUsername(),
-				'email' => $this->collectEmail ? $user->getEmail() : '',
 				self::SOURCE => self::DISCORD
 			];
+
+			if ( $this->collectEmail ) {
+				$userInfo[] = ['email' => $user->getEmail()];
+			}
+
+			return $userInfo;
 		} catch ( \Exception $e ) {
 			$errorMessage = $e->getMessage();
 			return false;
