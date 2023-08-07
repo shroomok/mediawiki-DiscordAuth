@@ -46,8 +46,16 @@
 	},
 	"DiscordApprovedRoles": {
 	  "value": [],
-	  "descriptionmsg": "Array of strings. Discord users with the following roles are allowed to login to wiki"
+	  "descriptionmsg": "Array of strings. An array of Discord Role names. Discord users with the following roles are allowed to login to wiki"
 	},
+    "DiscordCollectEmail": {
+	  "value": false,
+	  "descriptionmsg": "Boolean. This flag regulates whether the user's Discord email should be collected and used to create their wiki account"
+	},
+    "PrependDiscordToWikiUsername": {
+	  "value": true,
+      "descriptionmsg": "Boolean. This flag regulates whether \"Discord\" should be prepended to their wiki username to distinguish them from locally created users"
+    },
 	"DiscordToRegisterNS": {
 	  "value": false,
 	  "descriptionmsg": "This flag regulates whether to run onMediaWikiServices hook or not which registers Discord NS, group, and permissions"

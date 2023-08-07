@@ -3,6 +3,7 @@
 namespace DiscordAuth\AuthenticationProvider;
 
 use Wohali\OAuth2\Client\Provider\Discord;
+use MediaWiki\MediaWikiServices;
 use MediaWiki\User\UserIdentity;
 use WSOAuth\AuthenticationProvider\AuthProvider;
 
@@ -15,23 +16,32 @@ class DiscordAuth extends AuthProvider {
 	 * @var Discord
 	 */
 	private $provider;
+	private $collectEmail;
 
 	/**
 	 * @inheritDoc
 	 */
-	public function __construct( string $clientId, string $clientSecret, ?string $authUri, ?string $redirectUri ) {
+	public function __construct( string $clientId, string $clientSecret, ?string $authUri, ?string $redirectUri, array $extensionData = [] ) {
 		$this->provider = new Discord( [
 			'clientId' => $clientId,
 			'clientSecret' => $clientSecret,
 			'redirectUri' => $redirectUri
 		] );
+		$config = MediaWikiServices::getInstance()->getMainConfig();
+		$this->collectEmail = (bool)$config->get('DiscordCollectEmail');
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public function login( ?string &$key, ?string &$secret, ?string &$authUrl ): bool {
-		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => [ 'identify' ] ]);
+		$scopes = ['identify'];
+
+		if ($this->collectEmail) {
+			$scopes[] = 'email';
+		}
+
+		$authUrl = $this->provider->getAuthorizationUrl([ 'scope' => $scopes]);
 
 		$secret = $this->provider->getState();
 
@@ -49,25 +59,32 @@ class DiscordAuth extends AuthProvider {
 	 */
 	public function getUser( string $key, string $secret, &$errorMessage ) {
 		if ( !isset( $_GET['code'] ) ) {
+			$errorMessage = 'Discord did not return authorization code';
 			return false;
 		}
 
-		if ( !isset( $_GET['state'] ) || empty( $_GET['state'] ) || ( $_GET['state'] !== $secret ) ) {
+		if (empty( $_GET['state'] ) || ( $_GET['state'] !== $secret) ) {
+			$errorMessage = 'Discord did not return authorization state';
 			return false;
 		}
 
 		try {
-			$token = $this->provider->getAccessToken( 'authorization_code', [ 'code' => $_GET['code'] ] );
-			$user = $this->provider->getResourceOwner( $token );
-
-			return [
+			$token = $this->provider->getAccessToken('authorization_code', ['code' => $_GET['code']]);
+			$user = $this->provider->getResourceOwner($token);
+			$userInfo = [
 				'name' => self::DISCORD . '-' . $user->getId(),
 				'discord_user_id' => $user->getId(),
 				'realname' => $user->getUsername(),
-				'email' => $user->getId() . '@discord.com',
 				self::SOURCE => self::DISCORD
 			];
+
+			if ( $this->collectEmail ) {
+				$userInfo[] = ['email' => $user->getEmail()];
+			}
+
+			return $userInfo;
 		} catch ( \Exception $e ) {
+			$errorMessage = $e->getMessage();
 			return false;
 		}
 	}
