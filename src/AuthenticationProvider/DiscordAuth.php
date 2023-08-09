@@ -28,7 +28,7 @@ class DiscordAuth extends AuthProvider {
 			'redirectUri' => $redirectUri
 		] );
 		$config = MediaWikiServices::getInstance()->getMainConfig();
-		$this->collectEmail = (bool)$config->get('DiscordCollectEmail');
+		$this->collectEmail = (bool)$config->get('DiscordAuthCollectEmail');
 	}
 
 	/**
