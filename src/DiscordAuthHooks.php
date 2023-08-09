@@ -178,7 +178,7 @@ class DiscordAuthHooks {
 
 		$userApproved = false;
 		try {
-			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id'], $this->guildId, $this->config->get('DiscordApprovedRoles') );
+			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id'], $this->guildId, $this->approvedRoles );
 		} catch ( \Exception $e ) {
 		    $errorMessage = $e->getMessage();
 			return false;
