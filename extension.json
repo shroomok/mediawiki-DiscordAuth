@@ -48,6 +48,10 @@
 	  "value": [],
 	  "descriptionmsg": "Array of strings. An array of Discord Role names. Discord users with the following roles are allowed to login to wiki"
 	},
+    "DiscordAuthApprovedIDs": {
+		"value": [],
+		"descriptionmsg": "Array of floats. An array of Discord User IDs. Discord users with the following IDs are allowed to login to the wiki, even if they are not in $DiscordAuthGuildId"
+	},
     "DiscordAuthCollectEmail": {
 	  "value": false,
 	  "descriptionmsg": "Boolean. This flag regulates whether the user's Discord email should be collected and used to create their wiki account"
