@@ -22,9 +22,6 @@
   "AutoloadNamespaces": {
 	"DiscordAuth\\": "src/"
   },
-  "ServiceWiringFiles": [
-	"includes/ServiceWiring.php"
-  ],
   "Hooks": {
 	"WSOAuthAfterGetUser": "main",
 	"MediaWikiServices": "\\DiscordAuth\\DiscordAuthHooks::onMediaWikiServices",

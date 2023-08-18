@@ -2,13 +2,14 @@
 
 namespace DiscordAuth;
 
+use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use MediaWiki\Permissions\Authority;
 use MediaWiki\User\UserIdentity;
 use Title;
 use Status;
 use HTMLForm;
 use RequestContext;
-use RestCord\DiscordClient;
 use MalformedTitleException;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\ContributionsLookup;
@@ -28,9 +29,8 @@ class DiscordAuthHooks {
 	protected string $NS;
 
 	public function __construct() {
-		/** @var DiscordClient $discordClient */
-		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
 		$this->config = MediaWikiServices::getInstance()->getMainConfig();
+		$this->discordClient = new DiscordClient( $this->config->get( 'DiscordAuthBotToken' ) );
 		$this->guildId = $this->config->get('DiscordAuthGuildId');
 		$this->approvedRoles = $this->config->get('DiscordAuthApprovedRoles');
 		$this->collectEmail = $this->config->get('DiscordAuthCollectEmail');
@@ -179,8 +179,8 @@ class DiscordAuthHooks {
 		$userApproved = false;
 		try {
 			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id'], $this->guildId, $this->approvedRoles );
-		} catch ( \Exception $e ) {
-		    $errorMessage = $e->getMessage();
+		} catch ( Exception $e ) {
+			$errorMessage = "Failed to check Discord user permissions";
 			return false;
 		}
 		if (!$userApproved) {
@@ -206,26 +206,27 @@ class DiscordAuthHooks {
 
 	/**
 	 * @param string $discordUserId
-	 * @param integer $discordGuildId
+	 * @param int $discordGuildId
 	 * @param array $approvedRoleNames
 	 * @throws \Psr\Container\ContainerExceptionInterface
 	 * @throws \Psr\Container\NotFoundExceptionInterface
+	 * @throws GuzzleException
 	 */
-	protected function checkDiscordUser(string $discordUserId, int $discordGuildId, array $approvedRoleNames ) {
-		$this->logger->debug("Checking User {$discordUserId}");
-		$member = $this->discordClient->guild->getGuildMember(
-			['guild.id' => $discordGuildId, 'user.id' => (int) $discordUserId]
-		);
+	protected function checkDiscordUser( string $discordUserId, int $discordGuildId, array $approvedRoleNames ) {
+		$this->logger->debug( "Checking User $discordUserId" );
 
-		$memberRolesJson = json_encode($member->roles);
-		$this->logger->debug("Member has roles {$memberRolesJson}");
+		$member = $this->discordClient->getGuildMember( $discordGuildId, $discordUserId );
+
+		$memberRolesJson = json_encode( $member->roles );
+		$this->logger->debug( "Member has roles {$memberRolesJson}" );
 
 		$roleIds = $this->getApprovedDiscordRolesIdsByNames( $discordGuildId, $approvedRoleNames );
-		$roleIdsJson = json_encode($roleIds);
-		$this->logger->debug("Found approved role list: {$roleIdsJson}");
+		$roleIdsJson = json_encode( $roleIds );
+		$this->logger->debug( "Found approved role list: {$roleIdsJson}" );
 
 		if ( !$roleIds ) {
-			$this->logger->error('No approved Discord role IDs were found. Please check that role names are spelled correctly.');
+			$this->logger->error( 'No approved Discord role IDs were found.
+			 Please check that role names are spelled correctly.' );
 			return false;
 		}
 
@@ -235,7 +236,7 @@ class DiscordAuthHooks {
 			}
 		}
 
-		$this->logger->error('Login failed: member does not have any approved roles');
+		$this->logger->error( 'Login failed: member does not have any approved roles' );
 		return false;
 	}
 
@@ -243,9 +244,10 @@ class DiscordAuthHooks {
 	 * @param $guildId
 	 * @param $roleNames
 	 * @return array
+	 * @throws GuzzleException
 	 */
 	protected function getApprovedDiscordRolesIdsByNames( $guildId, $roleNames ) {
-		$roleObjects = $this->discordClient->guild->getGuildRoles( ['guild.id' => $guildId] );
+		$roleObjects = $this->discordClient->getGuildRoles( $guildId );
 		$roleIds = [];
 		foreach( $roleObjects as $roleObject ) {
 			foreach ( $roleNames as $roleName ) {
