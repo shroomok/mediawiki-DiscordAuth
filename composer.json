@@ -12,15 +12,8 @@
 	],
 	"require": {
 		"mediawiki/oauthclient": "*",
-		"wohali/oauth2-discord-new": "^1.2",
-		"restcord/restcord": "dev-develop"
+		"wohali/oauth2-discord-new": "^1.2"
 	},
-	"repositories": [
-		{
-			"url": "https://github.com/restcord/restcord.git",
-			"type": "git"
-		}
-	],
 	"require-dev": {
 		"mediawiki/mediawiki-codesniffer": "40.0.1",
 		"mediawiki/minus-x": "1.1.1",
