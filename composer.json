@@ -17,7 +17,7 @@
 	},
 	"repositories": [
 		{
-			"url": "https://github.com/restcord/restcord.git",
+			"url": "https://github.com/shroomok/restcord.git",
 			"type": "git"
 		}
 	],
