@@ -72,7 +72,7 @@ class DiscordAuth extends AuthProvider {
 			$token = $this->provider->getAccessToken('authorization_code', ['code' => $_GET['code']]);
 			$user = $this->provider->getResourceOwner($token);
 			$userInfo = [
-				'name' => self::DISCORD . '-' . $user->getId(),
+				'name' => $user->getUsername(),
 				'discord_user_id' => $user->getId(),
 				'realname' => $user->getUsername(),
 				self::SOURCE => self::DISCORD
