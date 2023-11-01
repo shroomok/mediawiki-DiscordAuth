@@ -17,19 +17,30 @@ use DiscordAuth\AuthenticationProvider\DiscordAuth;
 use MediaWiki\Logger\LoggerFactory;
 
 class DiscordAuthHooks {
-
-	protected $discordClient;
-	protected $guildId;
-	protected $config;
 	protected $logger;
+	private $discordClient;
+	protected $config;
+	protected int $guildId;
+	protected array $approvedRoles;
+	protected array $approvedIDs;
+	protected bool $collectEmail;
+	protected bool $showUserContributionsOnMainPage;
+	protected bool $registerNS;
+	protected string $NS;
 
 	public function __construct() {
 		/** @var DiscordClient $discordClient */
 		$this->discordClient = MediaWikiServices::getInstance()->get('DiscordClient');
 		$this->config = MediaWikiServices::getInstance()->getMainConfig();
-		$this->guildId = $this->config->get('DiscordGuildId');
+		$this->guildId = $this->config->get('DiscordAuthGuildId');
+		$this->approvedRoles = $this->config->get('DiscordAuthApprovedRoles');
+		$this->approvedIDs = $this->config->get('DiscordAuthApprovedIDs');
+		$this->collectEmail = $this->config->get('DiscordAuthCollectEmail');
+		$this->showUserContributionsOnMainPage = $this->config->get('DiscordAuthShowUserContributionsOnMainPage');
+		$this->registerNS = $this->config->get('DiscordAuthRegisterNS');
+		$this->NS = $this->config->get('DiscordAuthNS');
 		// Accessing this in checkDiscordUser returns null for some reason?
-        $this->logger = LoggerFactory::getInstance( 'DiscordAuth' );
+		$this->logger = LoggerFactory::getInstance( 'DiscordAuth' );
 	}
 
 	/**
@@ -45,11 +56,11 @@ class DiscordAuthHooks {
 	 * @throws \MWException
 	 */
 	public function onOutputPageBeforeHTML( \OutputPage $out, &$text ) {
-		if ( $this->config->get('DiscordShowUserContributionsOnMainPage') !== true ) {
+		if ( $this->showUserContributionsOnMainPage !== true ) {
 			return;
 		}
 
-		if ( $this->config->get('DiscordToRegisterNS') !== true ) {
+		if ( $this->registerNS !== true ) {
 			return;
 		}
 
@@ -57,7 +68,7 @@ class DiscordAuthHooks {
 			return;
 		}
 
-		if ( !$ns = self::getDiscordNS($this->config->get('DiscordNS')) ) {
+		if ( !$ns = self::getDiscordNS($this->NS) ) {
 			return;
 		}
 
@@ -113,11 +124,11 @@ class DiscordAuthHooks {
 			   $wgOAuthAutoPopulateGroups, $wgExtraNamespaces;
 
 		$config = $services->getMainConfig();
-		if ( $config->get('DiscordToRegisterNS') !== true ) {
+		if ( $config->get('DiscordAuthRegisterNS') !== true ) {
 			return;
 		}
 
-		if (!$ns = self::getDiscordNS($config->get('DiscordNS'))) {
+		if (!$ns = self::getDiscordNS($config->get('DiscordAuthNS'))) {
 			return;
 		}
 		if ( array_key_exists( $ns['id'], $wgExtraNamespaces ) ) {
@@ -134,11 +145,11 @@ class DiscordAuthHooks {
 		$wgNamespaceProtection[$ns['id']] = [$right];
 		$wgNamespacesWithSubpages[$ns['id']] = true;
 		$wgGroupPermissions['sysop'][$right] = true;
-        $wgGroupPermissions[$lowerAlias]['upload'] = true;
+		$wgGroupPermissions[$lowerAlias]['upload'] = true;
 		$wgGroupPermissions[$lowerAlias][$right] = true;
 		$wgNamespacesToBeSearchedDefault[$ns['id']] = 1;
 		$wgOAuthAutoPopulateGroups[] = $lowerAlias;
-        $wgNamespaceProtection[NS_FILE] = $right;
+		$wgNamespaceProtection[NS_FILE] = $right;
 	}
 
 	/**
@@ -151,34 +162,36 @@ class DiscordAuthHooks {
 			return false;
 		}
 		if ( !isset( $user_info[DiscordAuth::SOURCE] )) {
-		    $errorMessage = 'Authentication attempt missing source attribute';
+			$errorMessage = 'Authentication attempt missing source attribute';
 			return false;
 		}
 		if ( $user_info[DiscordAuth::SOURCE] !== DiscordAuth::DISCORD ) {
-		    $errorMessage = 'Authentication attempt source is not DiscordAuth';
+			$errorMessage = 'Authentication attempt source is not DiscordAuth';
 			return false;
 		}
-		if ( !isset( $this->guildId )) {
-		    $errorMessage = 'No guild configured';
-		    return false;
+		if ( $this->guildId === 0 && count($this->approvedIDs) === 0 ) {
+			$errorMessage = 'No guild or approved user IDs configured';
+			return false;
 		}
-        if ( $this->config->get('DiscordApprovedRoles') === null ) {
-            $errorMessage = 'No approved roles configured';
-            return false;
-        }
+		if ( $this->approvedRoles === [] && count($this->approvedIDs) === 0 ) {
+			$errorMessage = 'No approved roles or approved user IDs configured';
+			return false;
+		}
+		if ( in_array(strval($user_info['discord_user_id']), $this->approvedIDs, true) ) {
+			$this->logger->info( 'User ' . $user_info['discord_user_id'] . ' is in the approved user ID list.');
+			return true;
+		}
 
-		$userApproved = false;
 		try {
-			$userApproved = $this->checkDiscordUser( $user_info['discord_user_id'], $this->guildId, $this->config->get('DiscordApprovedRoles') );
+			$this->checkDiscordUser( $user_info['discord_user_id'], $this->guildId, $this->approvedRoles );
 		} catch ( \Exception $e ) {
-		    $errorMessage = $e->getMessage();
-			return false;
-		}
-		if (!$userApproved) {
+			$this->logger->error( $e->getMessage() );
+			$this->logger->error( 'Failed to check user\'s roles in guild.', $e->getTrace() );
+			$errorMessage = 'Failed to check user\'s roles in guild.';
 			return false;
 		}
 
-		if ( $this->config->get('DiscordCollectEmail') === true ) {
+		if ( $this->collectEmail === true ) {
 			$dbr = wfGetDB( DB_MASTER );
 			$user = $dbr->select(
 				'user',
@@ -203,20 +216,20 @@ class DiscordAuthHooks {
 	 * @throws \Psr\Container\NotFoundExceptionInterface
 	 */
 	protected function checkDiscordUser(string $discordUserId, int $discordGuildId, array $approvedRoleNames ) {
-		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Checking User {$discordUserId}");
+		$this->logger->debug("Checking User {$discordUserId}");
 		$member = $this->discordClient->guild->getGuildMember(
 			['guild.id' => $discordGuildId, 'user.id' => (int) $discordUserId]
 		);
 
 		$memberRolesJson = json_encode($member->roles);
-		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Member has roles {$memberRolesJson}");
+		$this->logger->debug("Member has roles {$memberRolesJson}");
 
 		$roleIds = $this->getApprovedDiscordRolesIdsByNames( $discordGuildId, $approvedRoleNames );
 		$roleIdsJson = json_encode($roleIds);
-		LoggerFactory::getInstance( 'DiscordAuth' )->debug("Found approved role list: {$roleIdsJson}");
+		$this->logger->debug("Found approved role list: {$roleIdsJson}");
 
 		if ( !$roleIds ) {
-			LoggerFactory::getInstance( 'DiscordAuth' )->error('No approved Discord role IDs were found. Please check that role names are spelled correctly.');
+			$this->logger->error('No approved Discord role IDs were found. Please check that role names are spelled correctly.');
 			return false;
 		}
 
@@ -226,7 +239,7 @@ class DiscordAuthHooks {
 			}
 		}
 
-        LoggerFactory::getInstance( 'DiscordAuth' )->error('Login failed: member does not have any approved roles');
+		$this->logger->error('Login failed: member does not have any approved roles');
 		return false;
 	}
 
