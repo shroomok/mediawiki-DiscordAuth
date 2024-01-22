@@ -40,31 +40,31 @@
 	  "value": false,
 	  "descriptionmsg": "String. Discord bot token"
 	},
-	"DiscordGuildId": {
+	"DiscordAuthGuildId": {
 	  "value": false,
 	  "descriptionmsg": "Integer. Guild (server) id of your Discord Community"
 	},
-	"DiscordApprovedRoles": {
+	"DiscordAuthApprovedRoles": {
 	  "value": [],
 	  "descriptionmsg": "Array of strings. An array of Discord Role names. Discord users with the following roles are allowed to login to wiki"
 	},
-    "DiscordCollectEmail": {
+    "DiscordAuthCollectEmail": {
 	  "value": false,
 	  "descriptionmsg": "Boolean. This flag regulates whether the user's Discord email should be collected and used to create their wiki account"
 	},
-    "PrependDiscordToWikiUsername": {
+    "DiscordAuthPrependDiscordToWikiUsername": {
 	  "value": true,
       "descriptionmsg": "Boolean. This flag regulates whether \"Discord\" should be prepended to their wiki username to distinguish them from locally created users"
     },
-	"DiscordToRegisterNS": {
+	"DiscordAuthRegisterNS": {
 	  "value": false,
 	  "descriptionmsg": "This flag regulates whether to run onMediaWikiServices hook or not which registers Discord NS, group, and permissions"
 	},
-	"DiscordNS": {
+	"DiscordAuthNS": {
 	  "value": false,
 	  "descriptionmsg": "Discord NS object, for instance { \"id\": 4000, \"alias\": \"Discord\" }"
 	},
-	"DiscordShowUserContributionsOnMainPage": {
+	"DiscordAuthShowUserContributionsOnMainPage": {
 	  "value": false,
 	  "descriptionmsg": "Change main page to make it easier for navigation and writing new articles for Discord user"
 	}
